@@ -3,6 +3,16 @@
 
 Balance of plant calculations of an integrated system using the waste heat from a solid oxide fuel cell (SOFC) powered data center to cool its servers.
 
+### Introduction
+Data center consumes great amount of power. Great power comes great cooling requirement (we'll work on that phrasing on a later update). Exactly one watts of cooling for each watts of power actually. 
+
+In a cool climate, you have the luxury of blowing outside air onto the servers. In a hot but dry environment, evaporative cooling can get your data center the cooling needed. But in a hot and humid climate, or when the great amount of water consumption by data center become too great a burden, it calls for
+an alternative solution.
+
+SOFC-powered data center is poised for waste heat cooling with its large amount of medium to low grade heat. **heat2cool** explores the integration of
+waste heat cooling and SOFC power generation in the basic level of energy material balances.
+
+
 ### Basic idea
 The picture below explains the crux of waste heat cooling.
 The indoor air is evporatively cooled, cools the server rack, then the moisture is removed with desiccant to
