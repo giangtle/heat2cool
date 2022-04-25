@@ -1,4 +1,4 @@
-function [ex_out, T_desorp, t_desorp] = cal_desorption_column(ex_in, T_bed_i, mSi, T_desorp, capacity)
+function [ex_out, T_desorp, t_desorp] = cal_desorption_column(ex_in, T_bed_i, Desiccant, T_desorp)
 % Constraints/Assumptions:
 %   _ integral rate of water removal from t=0 to t=t_ads equals total water
 %   (mH2O_0)
@@ -6,16 +6,10 @@ function [ex_out, T_desorp, t_desorp] = cal_desorption_column(ex_in, T_bed_i, mS
 % Unknowns:
 %   _ exhaust_out.T
 
-% Known constants:
-% Adsorbent: Silica
-Si = struct();
-Si.Cp = 1.13;   % [J/g/K]
 % Water properties:
 H2O = struct();
 H2O.Cp = 4.18;  % [J/g/K]
 H2O.MW = 18.01528;  % [g/mol]
-% Heat of adsorption:
-Q_adsorption = 2800;    % [J/g]
 
 % Water mole fraction of exhaust out is silica gel equilibrium at T_desorp:
 % If exhaust out has higher water mole fraction, T_desorp needs to increase
@@ -28,16 +22,21 @@ if (ex_in.T <= T_bed_i || ex_in.T <= T_desorp)
 end
 
 % Initial water mass:
-mH2O_0 = mSi*capacity;
+mH2O_0 = Desiccant.m*Desiccant.capacity;
 
 % dH:
 dH_heat_up = cal_dH_heat_up(ex_in, T_desorp);
 dH_evap = cal_stream_enthalpy(only_air(ex_in))-cal_stream_enthalpy(only_air(ex_out));
+
+% dQ:
+Q_heat_up = ( ( Desiccant.m*Desiccant.Cp + mH2O_0*H2O.Cp )*(T_desorp-T_bed_i) );
+Q_desorp = mH2O_0*Desiccant.Q_adsorption;
+
 % heat up time:
-t_heat_up = ( ( mSi*Si.Cp + mH2O_0*H2O.Cp )*(T_desorp-T_bed_i) )/dH_heat_up;
+t_heat_up = Q_heat_up/dH_heat_up;
 
 % evaporation time:
-t_evap = mH2O_0*Q_adsorption/dH_evap;
+t_evap = Q_desorp/dH_evap;
 
 % Total desorption time:
 t_desorp = t_heat_up + t_evap;

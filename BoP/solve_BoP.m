@@ -1,20 +1,27 @@
-function BoP = solve_BoP(air, CH4, n_H2O, W_e, T_env, T_cold_aisle, T_hot_aisle, yH2O_ads, capacity)
+function BoP = solve_BoP(air, CH4, n_H2O, W_e, T_env, T_cold_aisle, T_hot_aisle, yH2O_ads)
 % FC system additional information:
 W_loss = 150;               % [Watts]
-% Desorption/Adsorption column additional information:
-mSi = 1000;                % [g]
-% Initial guess of desorption temperature:
-T_desorp = 40+273.15;
+
+% Desorption/Adsorption information:
+Desiccant = struct();
+Desiccant.id = "Si";
+Desiccant.m = 5000; % [g]
+Desiccant.capacity = 0.2; % [g H2O per g Desiccant]
+Desiccant.Cp = 1.13;   % [J/g/K]
+Desiccant.Q_adsorption = 2800;    % [J/g]
+
+% Guess of desorption temperature:
+T_desorp = 50+273.15;
 
 % Water supply stream:
 H2O = struct(); H2O.phase = "liq"; H2O.yH2Ol = 1; H2O.T = T_env; H2O.n = n_H2O;
 
-% exhaust calculation:
+% Exhaust stream:
 ex_FC = cal_FC_black_box(CH4, H2O, air, W_e, W_loss);
 
 % air-1 conditions
 air_1 = cal_air_loop_condition(T_env, T_cold_aisle, T_hot_aisle, yH2O_ads);
-[air_1, air_2, ex_1, T_desorp, t_cycle] = cal_ads_desorption_cycle(ex_FC, air_1, mSi, T_desorp, yH2O_ads, capacity);
+[air_1, air_2, ex_1, T_desorp, t_cycle] = cal_adsorp_desorp_cycle(ex_FC, air_1, Desiccant, T_desorp, yH2O_ads);
 air_loop = cal_air_loop(air_1, air_2, T_env, T_cold_aisle, T_hot_aisle, yH2O_ads);
 
 % water recollection:
@@ -53,7 +60,7 @@ BoP = assign_stream();
         BoP.yO2_air_1 = air_loop.air_1.yO2;
         BoP.yN2_air_1 = air_loop.air_1.yN2;
         BoP.n_air_loop_H2O_consumption = air_loop.H2O_consumption.n;
-        BoP.H_room = air_loop.air_4.yH2O/(cal_water_y_sat(air_loop.air_4.T));
+        BoP.H_room = air_loop.air_4.yH2O/(cal_yH2Osat(air_loop.air_4.T));
         % WATER RECOLLECTION:
         BoP.n_flue_condensate = water_collection.n_flue_condensate;
         BoP.net_water = BoP.n_flue_condensate - BoP.n_air_loop_H2O_consumption;
@@ -77,15 +84,15 @@ BoP = assign_stream();
         BoP.T_air_4 = air_loop.air_4.T - 273.15;
         BoP.T_air_5 = air_loop.air_5.T - 273.15;
         BoP.T_H2O_consumption = air_loop.H2O_consumption.T - 273.15;
-        BoP.H_air_1 = air_loop.air_1.yH2O/(cal_water_y_sat(air_loop.air_1.T));
-        BoP.H_air_2 = air_loop.air_2.yH2O/(cal_water_y_sat(air_loop.air_2.T));
-        BoP.H_air_3 = air_loop.air_3.yH2O/(cal_water_y_sat(air_loop.air_3.T));
-        BoP.H_air_4 = air_loop.air_4.yH2O/(cal_water_y_sat(air_loop.air_4.T));
-        BoP.H_air_5 = air_loop.air_5.yH2O/(cal_water_y_sat(air_loop.air_5.T));
+        BoP.H_air_1 = air_loop.air_1.yH2O/(cal_yH2Osat(air_loop.air_1.T));
+        BoP.H_air_2 = air_loop.air_2.yH2O/(cal_yH2Osat(air_loop.air_2.T));
+        BoP.H_air_3 = air_loop.air_3.yH2O/(cal_yH2Osat(air_loop.air_3.T));
+        BoP.H_air_4 = air_loop.air_4.yH2O/(cal_yH2Osat(air_loop.air_4.T));
+        BoP.H_air_5 = air_loop.air_5.yH2O/(cal_yH2Osat(air_loop.air_5.T));
         
         % Adsorption - desorption cycle:
-        BoP.mSi = mSi;
-        BoP.capacity = capacity;
+        BoP.mDesiccant = Desiccant.m;
+        BoP.capacity = Desiccant.capacity;
         BoP.t_cycle = t_cycle;
     end
 end

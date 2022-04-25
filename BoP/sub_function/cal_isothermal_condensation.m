@@ -3,7 +3,7 @@ if in.phase == "liq"
     gas_stream = 0;
     liq_stream = in;
 else
-    yH2O_sat = cal_water_y_sat(in.T);
+    yH2O_sat = cal_yH2Osat(in.T);
     if in.yH2O <= yH2O_sat
         gas_stream = in;
         liq_stream = 0;
@@ -14,7 +14,7 @@ end
 end
 
 function [gas_stream, liq_stream] = isothermal_condesation(in)
-y_sat = cal_water_y_sat(in.T);
+y_sat = cal_yH2Osat(in.T);
 n_gas_stream = in.n*(1-in.yH2O)/(1-y_sat);
 n_liq_stream = in.n- n_gas_stream;
 % Assign streams:

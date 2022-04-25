@@ -1,4 +1,4 @@
-function out = water_liq_or_vap(H2O_in)
+function out = liq_or_vap(H2O_in)
 out = struct();
 % check if "phase" field is in H2O_in:
 if isfield(H2O_in, "phase")

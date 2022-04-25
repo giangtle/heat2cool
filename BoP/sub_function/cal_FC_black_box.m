@@ -3,7 +3,7 @@ exhaust = struct();
 exhaust.phase = "gas";
 FC_black_box = struct();
 
-H2O =  water_liq_or_vap(H2O);
+H2O =  liq_or_vap(H2O);
 
 exhaust.n = CH4.n + H2O.n + air.n;
 gas = "yCO2";

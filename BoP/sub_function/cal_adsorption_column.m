@@ -1,4 +1,4 @@
-function [air_out_avg, air_out_dynamic, T_bed_f, t_ads] = cal_adsorption_column(air_in, T_bed_0, mSi, yH2O_ads, capacity)
+function [air_out_avg, air_out_dynamic, T_bed_f, t_ads] = cal_adsorption_column(air_in, T_bed_0, Desiccant, yH2O_ads)
 % Adsorption process.
 [~, liq_stream] = cal_isenthalpic_condensation(air_in);
 if isstruct(liq_stream)
@@ -8,20 +8,14 @@ end
 if ~(isfield(air_in, "yH2O"))
     fprintf("ERROR: input stream (in) does not contain water")
 end
-% Known constants:
-% Adsorbent: Silica
-Si = struct();
-Si.Cp = 1.13;   % [J/g/K]
 % Water properties:
 H2O = struct();
 H2O.Cp = 4.18;  % [J/g/K]
 H2O.MW = 18.01528;  % [g/mol]
-% Heat of adsorption:
-Q_adsorption = 2800;    % [J/g]
 
 % Needed input: column Silica mass - m_Si %[g]
-mH2O_end = mSi*capacity;
-tspan = [0 (mSi*capacity/(air_in.yH2O*air_in.n*H2O.MW*0.01))];
+mH2O_end = Desiccant.m*Desiccant.capacity;
+tspan = [0 (Desiccant.m*Desiccant.capacity/(air_in.yH2O*air_in.n*H2O.MW*0.01))];
 y0 = [0, T_bed_0];
 opt = odeset('Events', @myEvent);
 [t, y] = ode15s(@(t, y) find_prime(t, y, air_in), tspan, y0, opt);
@@ -47,8 +41,8 @@ air_out_avg.T = trapz(t, y(:,2))/t_ads;
     dH = cal_stream_enthalpy(only_air(in))-cal_stream_enthalpy(only_air(out));
     % Mass of water:
     dy(1) = ( in.n*in.yH2O - out.n*out.yH2O)*H2O.MW;
-    % (mSi*Si.Cp + mH2O*H2O.Cp)*dT/dt = in.yH2O*in.n*H2O.MW*Q_adsorption
-    dy(2) = ( dy(1)*Q_adsorption + dH )/( y(1)*H2O.Cp + mSi*Si.Cp );
+    % (mDesiccant*CpDesiccant + mH2O*H2O.Cp)*dT/dt = in.yH2O*in.n*H2O.MW*Desiccant.Q_adsorption
+    dy(2) = ( dy(1)*Desiccant.Q_adsorption + dH )/( y(1)*H2O.Cp + Desiccant.m*Desiccant.Cp );
     end
 
     function [value, isterminal, direction] = myEvent(~, y)

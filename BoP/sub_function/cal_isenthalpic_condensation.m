@@ -3,7 +3,7 @@ if in.phase == "liq"
     gas_stream = 0;
     liq_stream = in;
 else
-    yH2O_sat = cal_water_y_sat(in.T);
+    yH2O_sat = cal_yH2Osat(in.T);
     if in.yH2O <= yH2O_sat
         gas_stream = in;
         liq_stream = 0;

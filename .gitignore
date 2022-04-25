@@ -1,3 +1,7 @@
+# IGNORE FOLDERS:
+DS2/
+DS1/
+
 b/
 node_modules/
 *.egg-info/
