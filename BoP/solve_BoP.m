@@ -59,8 +59,8 @@ BoP = assign_stream();
         BoP.yN2_air_1 = air_loop.air_1.yN2;
         BoP.H_room = air_loop.air_4.yH2O/(cal_yH2Osat(air_loop.air_4.T));
         % WATER RECOLLECTION:
-        BoP.H2O_consumption_from_air_loop = air_loop.H2O_consumption.n;
-        BoP.H2O_consumption_from_FC = H2O.n;
+        BoP.water_consumption_from_air_loop = air_loop.H2O_consumption.n;
+        BoP.water_consumption_from_FC = H2O.n;
         BoP.water_collected = water_collection.ex_cond.n;
         BoP.net_water = water_collection.ex_cond.n - air_loop.H2O_consumption.n - H2O.n;
 
