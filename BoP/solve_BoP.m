@@ -57,11 +57,12 @@ BoP = assign_stream();
         BoP.yH2O_air_1 = air_loop.air_1.yH2O;
         BoP.yO2_air_1 = air_loop.air_1.yO2;
         BoP.yN2_air_1 = air_loop.air_1.yN2;
-        BoP.n_air_loop_H2O_consumption = air_loop.H2O_consumption.n;
         BoP.H_room = air_loop.air_4.yH2O/(cal_yH2Osat(air_loop.air_4.T));
         % WATER RECOLLECTION:
-        BoP.n_flue_condensate = water_collection.n_flue_condensate;
-        BoP.net_water = BoP.n_flue_condensate - BoP.n_air_loop_H2O_consumption;
+        BoP.H2O_consumption_from_air_loop = air_loop.H2O_consumption.n;
+        BoP.H2O_consumption_from_FC = H2O.n;
+        BoP.water_collected = water_collection.ex_cond.n;
+        BoP.net_water = water_collection.ex_cond.n - air_loop.H2O_consumption.n - H2O.n;
 
         % TEMPERATURE (in oC):
         % CH4 in SYSTEM:
@@ -97,16 +98,13 @@ end
 
 function water_collection = cal_water_recollection(ex_1, T_env)
 ex_2 = ex_1; ex_2.T = T_env + 5;
-[gas_stream, liq_stream] = cal_isothermal_condensation(ex_2);
-W_condenser = cal_stream_enthalpy(ex_1) - cal_stream_enthalpy(gas_stream) - cal_stream_enthalpy(liq_stream);
-n_flue_condensate = liq_stream.n;
+[ex_2, ex_cond] = cal_isothermal_condensation(ex_2);
+W_condenser = cal_stream_enthalpy(ex_1) - cal_stream_enthalpy(ex_2) - cal_stream_enthalpy(ex_cond);
 % Report back:
 water_collection = struct();
 water_collection.ex_2 = ex_2;
-water_collection.gas_stream = gas_stream;
-water_collection.liq_stream = liq_stream;
+water_collection.ex_cond = ex_cond;
 water_collection.W_condenser = W_condenser;
-water_collection.n_flue_condensate = n_flue_condensate;
 end
 
 function air_loop = cal_air_loop(air_1, air_2, air_3, air_4, air_5, H2O_consumption)

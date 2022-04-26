@@ -1,5 +1,11 @@
-function BoP = matching_operation(T_env, H_env, T_cold_aisle, T_hot_aisle, H_room)
-[CH4, H2O, air] = base_case(T_env, H_env);
+function BoP = matching_operation(T_env, H_env, T_cold_aisle, T_hot_aisle, H_room, CH4, H2O, air)
+%if stream variables don't exist use the base case conditions: 
+if exist("CH4", "var") && exist("H2O", "var") && exist("air", "var")
+    fprintf("Using user-decalred operation.\n");
+else
+    fprintf("Using base case operation.\n");
+    [CH4, H2O, air] = base_case(T_env, H_env);
+end
 
 % Initial guess:
 We_0 = 1000;
