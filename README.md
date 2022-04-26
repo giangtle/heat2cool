@@ -30,7 +30,6 @@ An example of using the MATLAB code is inside the jupyter notebook example.ipynb
 * base_case.m to generate the base case condition or declare your own system inputs in a similar manner.
 * solve_BoP.m will solve the balance of plant.
 * matching_operation.m calculate the FC operation that matches the servers cooling need with the waste-heat cooling capacity.
-* You can annotate the BoP.png image with operating condition.
 
 The following information is needed (all temperature in Kelvin, all humidity is in fraction):
 * Outdoor environment temperature: T_env
