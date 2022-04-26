@@ -16,27 +16,27 @@ end
 
 end
 
-function [F, air_in, air_out, ex_out, T_desorp, t_ads] = equation_set(y, air_in, ex_in, Desiccant, T_desorp, yH2O_ads)
+function [F, air_1, air_2, ex_1, T_desorp, t_ads] = equation_set(y, air_1, ex_FC, Desiccant, T_desorp, yH2O_ads)
 % y is n_air_1
-air_in.n = y;
-T_desorp = cal_T_desorp(ex_in, T_desorp);
-[air_out, ~, T_bed_f, t_ads] = cal_adsorption_column(air_in, T_desorp, Desiccant, yH2O_ads);
-[ex_out, T_desorp, t_desorp] = cal_desorption_column(ex_in, T_bed_f, Desiccant, T_desorp);
+air_1.n = y;
+T_desorp = cal_T_desorp(ex_FC, T_desorp);
+[air_2, ~, T_bed_f, t_ads] = cal_adsorption_column(air_1, T_desorp, Desiccant, yH2O_ads);
+[ex_1, T_desorp, t_desorp] = cal_desorption_column(ex_FC, T_bed_f, Desiccant, T_desorp);
 F = t_ads - t_desorp;
 end
 
-function y0 = initial_guess(ex_in, air_in, Desiccant, T_desorp, yH2O_ads)
+function y0 = initial_guess(ex_FC, air_1, Desiccant, T_desorp, yH2O_ads)
 % Water mole fraction of exhaust out is silica gel equilibrium at T_desorp:
 % If exhaust out has higher water mole fraction, T_desorp needs to increase
-[~, ex_out] = cal_T_desorp(ex_in, T_desorp);
+[~, ex_out] = cal_T_desorp(ex_FC, T_desorp);
 
 % Water MW:
 H2O_MW = 18.01528;  % [g/mol]
 % Approximate water adsorption per mole of air flow:
-air_in.n = 1;
-d_ads_H2O_per_mole = air_in.n*air_in.yH2O - air_in.n*(1-air_in.yH2O)./(1-yH2O_ads)*yH2O_ads;
+air_1.n = 1;
+d_ads_H2O_per_mole = air_1.n*air_1.yH2O - air_1.n*(1-air_1.yH2O)./(1-yH2O_ads)*yH2O_ads;
 % Approximate water desorption by exhaust flow:
-dH = cal_stream_enthalpy(ex_in)-cal_stream_enthalpy(ex_out);
+dH = cal_stream_enthalpy(ex_FC)-cal_stream_enthalpy(ex_out);
 d_des_H2O = dH/Desiccant.Q_adsorption/H2O_MW;
 % Initial guess:
 y0 = d_des_H2O/d_ads_H2O_per_mole;

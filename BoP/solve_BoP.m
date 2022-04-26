@@ -1,4 +1,4 @@
-function BoP = solve_BoP(air, CH4, n_H2O, W_e, T_env, T_cold_aisle, T_hot_aisle, yH2O_ads)
+function BoP = solve_BoP(air, CH4, H2O, W_e, T_env, T_cold_aisle, T_hot_aisle, H_room)
 % FC system additional information:
 W_loss = 150;               % [Watts]
 
@@ -13,16 +13,13 @@ Desiccant.Q_adsorption = 2800;    % [J/g]
 % Guess of desorption temperature:
 T_desorp = 50+273.15;
 
-% Water supply stream:
-H2O = struct(); H2O.phase = "liq"; H2O.yH2Ol = 1; H2O.T = T_env; H2O.n = n_H2O;
-
 % Exhaust stream:
 ex_FC = cal_FC_black_box(CH4, H2O, air, W_e, W_loss);
 
 % air-1 conditions
-air_1 = cal_air_loop_condition(T_env, T_cold_aisle, T_hot_aisle, yH2O_ads);
-[air_1, air_2, ex_1, T_desorp, t_cycle] = cal_adsorp_desorp_cycle(ex_FC, air_1, Desiccant, T_desorp, yH2O_ads);
-air_loop = cal_air_loop(air_1, air_2, T_env, T_cold_aisle, T_hot_aisle, yH2O_ads);
+[air_1, air_3, air_4, air_5, H2O_consumption] = cal_air_loop_condition(T_env, T_cold_aisle, T_hot_aisle, H_room);
+[air_1, air_2, ex_1, T_desorp, t_cycle] = cal_adsorp_desorp_cycle(ex_FC, air_1, Desiccant, T_desorp, air_3.yH2O);
+air_loop = cal_air_loop(air_1, air_2, air_3, air_4, air_5, H2O_consumption);
 
 % water recollection:
 water_collection = cal_water_recollection(ex_1, T_env);
@@ -33,8 +30,9 @@ BoP = assign_stream();
     function BoP = assign_stream()
         BoP = struct();
         % ENERGY:
-        LHV = 802340; EE = W_e/(CH4.n*LHV);
-        BoP.EE = EE;
+        LHV = 802340;
+        BoP.LHV = (CH4.n*LHV);
+        BoP.EE = W_e/(CH4.n*LHV);
         BoP.W_e = W_e;
         BoP.W_server = air_loop.W_server;
         BoP.W_reject_1 = air_loop.W_reject_1;
@@ -111,8 +109,7 @@ water_collection.W_condenser = W_condenser;
 water_collection.n_flue_condensate = n_flue_condensate;
 end
 
-function air_loop = cal_air_loop(air_1, air_2, T_env, T_cold_aisle, T_hot_aisle, yH2O_ads)
-[~, air_3, air_4, air_5, H2O_consumption] = cal_air_loop_condition(T_env, T_cold_aisle, T_hot_aisle, yH2O_ads);
+function air_loop = cal_air_loop(air_1, air_2, air_3, air_4, air_5, H2O_consumption)
 air_3.n = air_2.n;
 air_4.n = air_1.n;
 air_5.n = air_1.n;
@@ -124,9 +121,9 @@ W_reject_2 = cal_stream_enthalpy(air_5) - cal_stream_enthalpy(air_1);
 % save info to air loop struct:
 air_loop = struct();
 air_loop.W_server = W_server; air_loop.W_reject_1 = W_reject_1; air_loop.W_reject_2 = W_reject_2;
-air_loop.T_cold_aisle = T_cold_aisle;
-air_loop.T_hot_aisle = T_hot_aisle;
-air_loop.T_H2O = T_env;
+air_loop.T_cold_aisle = air_4.T;
+air_loop.T_hot_aisle = air_5.T;
+air_loop.T_H2O = H2O_consumption.T;
 air_loop.air_1 = air_1;
 air_loop.air_2 = air_2;
 air_loop.air_3 = air_3;

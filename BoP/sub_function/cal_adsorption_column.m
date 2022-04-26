@@ -1,11 +1,13 @@
-function [air_out_avg, air_out_dynamic, T_bed_f, t_ads] = cal_adsorption_column(air_in, T_bed_0, Desiccant, yH2O_ads)
-% Adsorption process.
-[~, liq_stream] = cal_isenthalpic_condensation(air_in);
+function [air_2, air_2_dynamic, T_bed_f, t_ads] = cal_adsorption_column(air_1, T_bed_0, Desiccant, yH2O_ads)
+% Adsorption process of air_1 dehumidified into air_1.
+%   The dehumidified air temperature started out where the desorption stage left of,
+%   and eventually reach steady state, we approximate the average temperature as air_2 temperature.
+[~, liq_stream] = cal_isenthalpic_condensation(air_1);
 if isstruct(liq_stream)
     fprintf("ERROR: input stream (in) is not all gaseous\n")
     return
 end
-if ~(isfield(air_in, "yH2O"))
+if ~(isfield(air_1, "yH2O"))
     fprintf("ERROR: input stream (in) does not contain water")
 end
 % Water properties:
@@ -15,10 +17,10 @@ H2O.MW = 18.01528;  % [g/mol]
 
 % Needed input: column Silica mass - m_Si %[g]
 mH2O_end = Desiccant.m*Desiccant.capacity;
-tspan = [0 (Desiccant.m*Desiccant.capacity/(air_in.yH2O*air_in.n*H2O.MW*0.01))];
+tspan = [0 (Desiccant.m*Desiccant.capacity/(air_1.yH2O*air_1.n*H2O.MW*0.01))];
 y0 = [0, T_bed_0];
 opt = odeset('Events', @myEvent);
-[t, y] = ode15s(@(t, y) find_prime(t, y, air_in), tspan, y0, opt);
+[t, y] = ode15s(@(t, y) find_prime(t, y, air_1), tspan, y0, opt);
 % adsorption time:
 t_ads = t(end);
 
@@ -26,15 +28,15 @@ t_ads = t(end);
 T_bed_f = y(end,2);
 % Store exit stream condition:
 T_bed_m = y(:,2);
-air_out_dynamic = cal_out_stream(air_in, T_bed_m, yH2O_ads);
-air_out_dynamic.t = t;
+air_2_dynamic = cal_out_stream(air_1, T_bed_m, yH2O_ads);
+air_2_dynamic.t = t;
 
 % out average stream:
-air_out_avg = cal_out_stream(air_in, T_bed_m, yH2O_ads);
-air_out_avg.T = trapz(t, y(:,2))/t_ads;
+air_2 = cal_out_stream(air_1, T_bed_m, yH2O_ads);
+air_2.T = trapz(t, y(:,2))/t_ads;
 
     function dy = find_prime(~, y, in)
-    % Unknowns - y: 1. mH2O, bed     2. T_bed
+    % Unknowns - y: 1. water remaining in the column - mH2O     2. Temperature of the bed/air leaving the bed - T_bed
     dy = zeros(size(y));
     T_bed = y(2);
     out = cal_out_stream(in, T_bed, yH2O_ads);

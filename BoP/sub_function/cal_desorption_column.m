@@ -1,10 +1,10 @@
-function [ex_out, T_desorp, t_desorp] = cal_desorption_column(ex_in, T_bed_i, Desiccant, T_desorp)
+function [ex_1, T_desorp, t_desorp] = cal_desorption_column(ex_FC, T_bed_i, Desiccant, T_desorp)
 % Constraints/Assumptions:
 %   _ integral rate of water removal from t=0 to t=t_ads equals total water
 %   (mH2O_0)
 %   _ Fixed exit exhaust temperature.
 % Unknowns:
-%   _ exhaust_out.T
+%   _ exhaust exit temperature: ex_1.T
 
 % Water properties:
 H2O = struct();
@@ -13,10 +13,10 @@ H2O.MW = 18.01528;  % [g/mol]
 
 % Water mole fraction of exhaust out is silica gel equilibrium at T_desorp:
 % If exhaust out has higher water mole fraction, T_desorp needs to increase
-[T_desorp, ex_out] = cal_T_desorp(ex_in, T_desorp);
+[T_desorp, ex_1] = cal_T_desorp(ex_FC, T_desorp);
 
 % Consistency check:
-if (ex_in.T <= T_bed_i || ex_in.T <= T_desorp)
+if (ex_FC.T <= T_bed_i || ex_FC.T <= T_desorp)
     fprintf("ERROR: exhaust temperature too low.")
     return
 end
@@ -25,8 +25,8 @@ end
 mH2O_0 = Desiccant.m*Desiccant.capacity;
 
 % dH:
-dH_heat_up = cal_dH_heat_up(ex_in, T_desorp);
-dH_evap = cal_stream_enthalpy(only_air(ex_in))-cal_stream_enthalpy(only_air(ex_out));
+dH_heat_up = cal_dH_heat_up(ex_FC, T_desorp);
+dH_evap = cal_stream_enthalpy(only_air(ex_FC))-cal_stream_enthalpy(only_air(ex_1));
 
 % dQ:
 Q_heat_up = ( ( Desiccant.m*Desiccant.Cp + mH2O_0*H2O.Cp )*(T_desorp-T_bed_i) );
